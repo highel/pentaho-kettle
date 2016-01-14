@@ -52,6 +52,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileType;
@@ -1007,7 +1008,7 @@ public class JobEntryMail extends JobEntryBase implements Cloneable, JobEntryInt
                   // get a data Handler to manipulate this file type;
                   files.setDataHandler( new DataHandler( fds ) );
                   // include the file in the data source
-                  files.setFileName( file.getName().getBaseName() );
+                  files.setFileName(MimeUtility.encodeText(file.getName().getBaseName(), "UTF-8", null));
 
                   // insist on base64 to preserve line endings
                   files.addHeader( "Content-Transfer-Encoding", "base64" );
@@ -1081,7 +1082,7 @@ public class JobEntryMail extends JobEntryBase implements Cloneable, JobEntryInt
               // get a data Handler to manipulate this file type;
               files.setDataHandler( new DataHandler( fds ) );
               // include the file in the data source
-              files.setFileName( fds.getName() );
+              files.setFileName(MimeUtility.encodeText( fds.getName() , "UTF-8", null));
               // add the part with the file in the BodyPart();
               parts.addBodyPart( files );
             }
