@@ -164,6 +164,11 @@ public class Database implements VariableSpace, LoggingObjectInterface {
 
   private static List<ValueMetaInterface> valueMetaPluginClasses;
 
+  /** 
+   * Usually "INSERT INTO" prefix, but can be "UPSERT INTO" for some database types
+   */
+  private String insertStatementPrefix;
+
   static {
     try {
       valueMetaPluginClasses = ValueMetaFactory.getValueMetaPluginClasses();
@@ -1138,7 +1143,7 @@ public class Database implements VariableSpace, LoggingObjectInterface {
     StringBuffer ins = new StringBuffer( 128 );
 
     String schemaTable = databaseMeta.getQuotedSchemaTableCombination( schemaName, tableName );
-    ins.append( "INSERT INTO " ).append( schemaTable ).append( " (" );
+    ins.append( getInsertStatementPrefix() ).append( schemaTable ).append( " (" );
 
     // now add the names in the row:
     for ( int i = 0; i < fields.size(); i++ ) {
@@ -3800,7 +3805,21 @@ public class Database implements VariableSpace, LoggingObjectInterface {
     return count;
   }
 
-  public String[] getSchemas() throws KettleDatabaseException {
+  private String getInsertStatementPrefix() {
+    if (insertStatementPrefix == null) {
+      String driverClass = databaseMeta.getDriverClass();
+      if ( "org.apache.phoenix.jdbc.PhoenixDriver".equals( driverClass )  || "org.apache.phoenix.queryserver.client.Driver".equals( driverClass ))
+      {
+        insertStatementPrefix = "UPSERT INTO ";
+      }
+      else {
+        insertStatementPrefix = "INSERT INTO ";
+      }
+     }
+     return insertStatementPrefix;
+   }
+
+   public String[] getSchemas() throws KettleDatabaseException {
     ArrayList<String> catalogList = new ArrayList<String>();
     ResultSet catalogResultSet = null;
     try {
@@ -4309,7 +4328,7 @@ public class Database implements VariableSpace, LoggingObjectInterface {
 
     try {
       String schemaTable = databaseMeta.getQuotedSchemaTableCombination( schemaName, tableName );
-      ins.append( "INSERT INTO " ).append( schemaTable ).append( '(' );
+      ins.append( getInsertStatementPrefix()  ).append( schemaTable ).append( '(' );
 
       // now add the names in the row:
       for ( int i = 0; i < fields.size(); i++ ) {
